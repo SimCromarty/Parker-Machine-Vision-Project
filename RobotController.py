@@ -1,8 +1,6 @@
 # This file determines the functionality for controlling a robot arm
 # Simeon Cromarty Master's Project
-
-
-    
+  
 def pick_and_place(pick_x, pick_y, pick_h, place_x, place_y, place_h):
     
     # Convert image coordinates to robot workspace coordinates

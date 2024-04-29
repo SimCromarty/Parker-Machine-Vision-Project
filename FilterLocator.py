@@ -38,9 +38,9 @@ centres = []
 if len(results) > 0:
     print('Successful detection')
     for result in results:
-        boxes = result.boxes.cpu().numpy() # Each instance of box detection
+        boxes = result.boxes.cpu().numpy() # Each instance of detection
         for box in boxes:
-            x1, y1, x2, y2 = box.xyxy[0] # Unpack coordinates of each box 
+            x1, y1, x2, y2 = box.xyxy[0] # Unpack coordinates for each box 
             centre_x = (x1 + x2) / 2     # Calculate centre point of x and y's
             centre_y = (y1 + y2) / 2
             centres.append((centre_x, centre_y)) # Adds centres to list for robot use
@@ -76,7 +76,7 @@ print('Robot successfully completed ', detections, ' pick and place tasks')
 # Draw circles on the centre point of each detected filter
 for centre in centres:
     centre_x, centre_y = int(centre[0]), int(centre[1])  # Convert to integer for pixel coordinates
-    cv2.circle(undistorted_image, (centre_x, centre_y), radius=5, color=(0, 255, 0), thickness=-1) # Draw circle at each centre point
+    cv2.circle(undistorted_image, (centre_x, centre_y), radius=5, color=(0, 255, 0), thickness=-1) # Draw circle
 
 # Display the result
 cv2.imshow('Detected Filters', undistorted_image)

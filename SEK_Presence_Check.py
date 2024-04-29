@@ -1,9 +1,8 @@
 # Simeon Cromarty Master's Project - SEK Presence Checker
 # Ultralytics YOLO library documentation used to guide implementation (https://docs.ultralytics.com/)
+
 from ultralytics import YOLO
 import cv2
-
-# This code should follow the presnece check logic for checking o-ring first, then for filters.
 
 def detect_o_ring():
     # Sets model to O-Ring weights from training
@@ -11,15 +10,15 @@ def detect_o_ring():
     print('O-Ring Model Loaded')
     
     # Take image
-    cap = cv2.VideoCapture(1)                                                                           # Captures image from source 1 (webcam)
-    ret, frame = cap.read()                                                                             # Capture a single frame 
+    cap = cv2.VideoCapture(1)                                                                           
+    ret, frame = cap.read()                                                                         
     print('Image Taken')
     cap.release()    
     
-    # Flags to track the presence of filters
+    # Flag to track o-ring presence
     o_ring_detected = False
     
-    # Predicts image
+    # Predicts image taken
     results = model(frame, conf=0.85)
     
     # Lists to store results
@@ -51,16 +50,15 @@ def detect_o_ring():
         return True
     else:
         return False
-        
-        
+              
 def detect_filters():
-    # Sets model to Filter weights from training
+    # Sets model to filter weights from training
     model = YOLO('VisionProject/Trained_Weights/SEK_Filter_Weights_New_S50.pt')
     print('SEK Filter Model Loaded')
     
     # Take image
-    cap = cv2.VideoCapture(1)                                                                           # Captures image from source 1 (webcam)
-    ret, frame = cap.read()                                                                             # Capture a single frame 
+    cap = cv2.VideoCapture(1)                                                                           
+    ret, frame = cap.read()                                                                            
     print('Image Taken')
     cap.release()   
     
@@ -68,7 +66,7 @@ def detect_filters():
     main_filter_detected = False
     pre_filter_detected = False 
     
-    # Predicts image
+    # Predicts image taken
     results = model(frame, conf=0.85)
     
     # Lists to store results
@@ -79,19 +77,17 @@ def detect_filters():
     if len(results) > 0:
         print('Successful detection')
         for result in results:
-            #Each instance of detection
+            # Add each instance of detection
             boxes = result.boxes.cpu().numpy()
             for box in boxes:
                 filter_cls.append(box.cls)
                 filter_conf.append(box.conf)
-            result.show()
-        
+            result.show()    
     else:
         print('No detection')
     
     # Check each result in boxes
-    for i in range(len(boxes)):
-    
+    for i in range(len(boxes)): 
         if (filter_cls[i][0]) == 0:
             print('Detected Main Filter presence')
             main_filter_detected = True
@@ -109,25 +105,25 @@ def detect_filters():
         return 'Pre'
     else:
         return 'None'
-    
-    
+
+# PLC input simulation  
 def PLC_confirmation(prompt):
     response = input(prompt)
     return response == '1'
 
-
+# Presence Check
 while True:
     # O-Ring Detection Phase
     if PLC_confirmation("Enter 1 to signal o-ring has been placed, or any other key to exit: "):
         o_ring_detected = detect_o_ring()  # Capture the return value to check if the o-ring was detected
         if not o_ring_detected:  # Check if o-ring was not detected
             print("O-ring not detected. Please ensure it is correctly placed.")
-            if not PLC_confirmation("Error detected. Enter 1 after correcting to retry, or any other key to exit: "):
-                break  # Exit if the user does not confirm to retry
-            continue  # Retry from the beginning if o-ring detection fails
+            if not PLC_confirmation("Error detected. Enter 1 to retry, or any other key to exit: "):
+                break  # Exit if retry not wanted
+            continue  # Retry if o-ring detection fails
         print("O-ring detected. Next detection: Filters")
     else:
-        break  # Exit if user does not confirm o-ring placement
+        break  # Exit if o-ring placement not confirmed
 
     # Filter Detection Phase
     filters_detected = False
@@ -136,7 +132,7 @@ while True:
             filter_status = detect_filters()
             if filter_status == "Both":
                 print("Successful presence check. Both filters detected.")
-                filters_detected = True  # Set a flag or use appropriate logic to break out of the filter loop
+                filters_detected = True  # Set a flag to detected
             else:
                 error_message = "Missing filters: "
                 if filter_status == "Main":
@@ -148,13 +144,13 @@ while True:
                 print(error_message)
                 print('To retry see next message')
         else:
-            break  # Exit the filter loop if user does not confirm filter placement
+            break  # Exit filter loop if user does not confirm filter placement
 
-    if filters_detected:  # Check if the entire process is completed successfully
+    if filters_detected:  # Check if presence check is completed successfully
         if not PLC_confirmation("Presence check complete. Enter 1 to continue next cycle, or any other key to exit: "):
-            break  # Exit the main loop if the user does not want to repeat after successful detection
+            break  # Exit main loop if repeat not wanted after detection
         else:
-            o_ring_detected = False  # Reset detection flags for a new cycle
+            o_ring_detected = False  # Reset detection flags
             filters_detected = False
     else:
-        break  # Exit the main loop if filters are not detected and user chooses not to retry
+        break  # Exit main loop if filters are not detected and retry not wanted

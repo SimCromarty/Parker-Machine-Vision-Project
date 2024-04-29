@@ -8,8 +8,8 @@ import numpy as np
 
 def process_image():
     # Take image
-    cap = cv2.VideoCapture(1)                                                                           # Captures image from source 1 (webcam)
-    ret, frame = cap.read()                                                                             # Capture a single frame 
+    cap = cv2.VideoCapture(1)                                                                           
+    ret, frame = cap.read()                                                                            
     if ret:
         print('Image Taken')
         cap.release()
