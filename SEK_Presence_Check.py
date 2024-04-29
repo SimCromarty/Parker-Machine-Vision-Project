@@ -1,5 +1,5 @@
 # Simeon Cromarty Master's Project - SEK Presence Checker
-
+# Ultralytics YOLO library documentation used to guide implementation (https://docs.ultralytics.com/)
 from ultralytics import YOLO
 import cv2
 

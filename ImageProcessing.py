@@ -1,6 +1,6 @@
 # Simeon Cromarty Master's Project - Image Processing
 # This file investigates image pre processing techniques available with OpenCV with the aim of increasing vision model reliability.
-# All functions used are from OpenCV library documents
+# All functions used are from OpenCV library documents (https://docs.opencv.org/4.x/d2/d96/tutorial_py_table_of_contents_imgproc.html)
 
 # Import libraries
 import cv2
