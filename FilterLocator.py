@@ -1,3 +1,5 @@
+# Simeon Cromarty Master's Project - Filter Locator
+
 from ultralytics import YOLO
 import cv2
 import time
@@ -6,10 +8,10 @@ import os
 # Import image processing functions from ImageProcessing
 import ImageProcessing as imgpro
 
-#Import robot controller functions from RobotController 
+# Import robot controller functions from RobotController 
 import RobotController as robot
 
-#Sets model to trained Filter Locator weights
+# Sets model to trained Filter Locator weights
 model = YOLO('VisionProject/Trained_Weights/FilterLocatorWeights_New_S50.pt')
 print('Model Loaded')
 
@@ -45,7 +47,7 @@ if len(results) > 0:
 else:
     print('No detection')
 
-#Variables for robot operation
+# Variables for robot operation
 pick_height = 10  # Set value to robot pick height
 place_height = 10  # Set value to robot place height
 place_x, place_y = 100, 100  # Set place coordinates of robot

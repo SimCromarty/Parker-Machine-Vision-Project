@@ -1,12 +1,14 @@
-# This file investigates image pre processing techniques available with OpenCV with the aim of increasing vision model reliability 
+# Simeon Cromarty Master's Project - Image Processing
+# This file investigates image pre processing techniques available with OpenCV with the aim of increasing vision model reliability.
+# All functions used are from OpenCV library documents
 
 # Import libraries
 import cv2
 import numpy as np
 
 def process_image():
-    #Take image
-    cap = cv2.VideoCapture(1)                                                                           # Captures image of source 1 (webcam)
+    # Take image
+    cap = cv2.VideoCapture(1)                                                                           # Captures image from source 1 (webcam)
     ret, frame = cap.read()                                                                             # Capture a single frame 
     if ret:
         print('Image Taken')
@@ -45,9 +47,6 @@ def process_image():
     # Find contours from dilated edges
     contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Show sobel edges
-    #cv2.imshow('Sobel Combined Edges', sobel_combined)
-
     # Draw contours on the original image and show
     cv2.drawContours(image_for_drawing, contours, -1, (0, 255, 0), 2)
     #cv2.imshow('Contours from Sobel Edges', image_for_drawing)
@@ -62,8 +61,7 @@ def process_image():
     #cv2.imshow("Contours and Bounding Boxes", debug_image)
     #cv2.waitKey(0)
 
-
-    # Incorporate box dimensions to determine expected aspect ratio
+    # Box dimensions to determine expected aspect ratio
     expected_aspect_ratio = 600 / 420.0  # Length of box divided by width of box
     aspect_ratio_tolerance = 0.8         # Tolerance to account for lens distortion
 
@@ -83,8 +81,7 @@ def process_image():
         # Check both aspect ratio and relative size criteria
         if (abs(contour_aspect_ratio - expected_aspect_ratio) <= aspect_ratio_tolerance and
                 min_area_ratio <= contour_area_ratio <= max_area_ratio):
-            valid_contours.append(cnt) # If cnt valid then add to valid contours list
-
+            valid_contours.append(cnt) # If contour valid then add to valid contours list
 
     # If a valid contour detected, find largest of the valid contours to determine box
     if valid_contours:
@@ -103,9 +100,9 @@ def process_image():
         #cv2.imshow("Contour vs Approximated Polygon", polygon_image)
         #cv2.waitKey(0)
 
-        # Convert polygon to rectangle for the largest contour
+        # Convert polygon to rectangle
         rectangle_image = original_image.copy()
-        padding = 7 # Padding to make rectangle larger than box
+        padding = 7 # Padding to make rectangle slightly larger than box
         x, y, w, h = cv2.boundingRect(approx_polygon)
         x, y, w, h = x - padding, y - padding, w + 2 * padding, h + 2 * padding
         x = max(x, 0)  # Ensure x is not negative
@@ -115,51 +112,34 @@ def process_image():
         cv2.rectangle(rectangle_image, (x, y), (x+w, y+h), (0, 255, 0), 2)
         #cv2.imshow("Bounding Rectangle", rectangle_image)
         #cv2.waitKey(0)
-        
-
         # Crop the original colour image using the bounding rectangle of the largest contour
         cropped_roi = original_image[y:y+h, x:x+w]
-
-        # Display the cropped region of interest
-        #cv2.imshow("Cropped ROI", cropped_roi)
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
     else:                                       # Error to show no box found in image
         print("No valid box contour found.")
-        
-    # Now use the cropped image with further pre processing to make it easier for model to use...
 
-    # Polarising filter 
-
-    #Increased contrast
+    # Polarising filter effect - increase contrast
 
     # Convert to YUV color space, Y channel represents luminance
     yuv_image = cv2.cvtColor(cropped_roi, cv2.COLOR_BGR2YUV)
     y_channel, u, v = cv2.split(yuv_image)
 
     # Equalise the histogram of the Y channel
-    equalized_y = cv2.equalizeHist(y_channel)
+    equalised_y = cv2.equalizeHist(y_channel)
     
-    # Blend the equalized Y channel with the original Y channel
-    # Scale value controls the degree of equalization: 0 = no change, 1 = full equalization
-    Scale = 0.5  # Adjust alpha to your preference, e.g., 0.5 for a 50-50 blend
-    blended_y = cv2.addWeighted(y_channel, 1 - Scale, equalized_y, Scale, 0)
+    # Blend the equalised Y channel with the original Y channel
+    Scale = 0.5  # Increases contrast by 50%
+    blended_y = cv2.addWeighted(y_channel, 1 - Scale, equalised_y, Scale, 0)
 
     # Merge the equalised Y channel back and convert to BGR
     yuv_image = cv2.merge([blended_y, u, v])
     final_image = cv2.cvtColor(yuv_image, cv2.COLOR_YUV2BGR)
 
-    #cv2.imshow("Increased Contrast", final_image)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
-
     # Image resizing with zero padding for model input
-
     # Calculate the scaling factor
     height, width = final_image.shape[:2]
     scale = 640 / max(height, width)
 
-    # Resize the image with the same aspect ratio
+    # Resize the image with the aspect ratio
     resized_image = cv2.resize(final_image, (int(width * scale), int(height * scale)), interpolation=cv2.INTER_AREA)
 
     # Calculate padding
@@ -170,30 +150,21 @@ def process_image():
 
     # Add padding to the resized image
     resized_padded_image = cv2.copyMakeBorder(resized_image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
-
-    #cv2.imshow("Resized Image", resized_padded_image)
-    #cv2.waitKey(0)
-    #cv2.destroyAllWindows()
-    
     return resized_padded_image
 
 def undistort_image(image):
-    # Pre calculated camera matrix
+    # Pre calculated camera matrix from camera calibration 
     camera_matrix = np.array([[532.47459279, 0, 317.71358595],
                               [0, 530.56380816, 235.16618199],
                               [0, 0, 1]], dtype=np.float32)
 
-    # Pre calculated distortion coefficients
+    # Pre calculated distortion coefficients from camera calibration
     dist_coeffs = np.array([0.06952565, -0.20359022, 0.00026753, -0.00114502, 0.10290753], dtype=np.float32)
 
     h, w = image.shape[:2]
-    new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, (w, h), 1, (w, h))
+    new_camera_matrix = cv2.getOptimalNewCameraMatrix(camera_matrix, dist_coeffs, (w, h), 1, (w, h))
     
     # Undistort the image
     undistorted_img = cv2.undistort(image, camera_matrix, dist_coeffs, None, new_camera_matrix)
-
-    # Crop the image based on the ROI to remove black borders
-    #x, y, w, h = roi
-    #undistorted_img = undistorted_img[y:y+h, x:x+w]
 
     return undistorted_img

@@ -1,15 +1,17 @@
+# Simeon Cromarty Master's Project - SEK Presence Checker
+
 from ultralytics import YOLO
 import cv2
 
 # This code should follow the presnece check logic for checking o-ring first, then for filters.
 
 def detect_o_ring():
-    #Sets model to O-Ring weights from training
+    # Sets model to O-Ring weights from training
     model = YOLO('VisionProject/Trained_Weights/O_Ring_Weights_New_S50.pt')
     print('O-Ring Model Loaded')
     
-    #take image
-    cap = cv2.VideoCapture(1)                                                                           # Captures image of source 1 (webcam)
+    # Take image
+    cap = cv2.VideoCapture(1)                                                                           # Captures image from source 1 (webcam)
     ret, frame = cap.read()                                                                             # Capture a single frame 
     print('Image Taken')
     cap.release()    
@@ -17,7 +19,7 @@ def detect_o_ring():
     # Flags to track the presence of filters
     o_ring_detected = False
     
-    #Predicts image
+    # Predicts image
     results = model(frame, conf=0.85)
     
     # Lists to store results
@@ -28,7 +30,7 @@ def detect_o_ring():
     if len(results) > 0:
         print('Successful detection')
         for result in results:
-            #Each instance of detection
+            # Each instance of detection
             boxes = result.boxes.cpu().numpy()
             for box in boxes:
                 o_ring_cls.append(box.cls)
@@ -52,12 +54,12 @@ def detect_o_ring():
         
         
 def detect_filters():
-    #Sets model to O-Ring weights from training
+    # Sets model to Filter weights from training
     model = YOLO('VisionProject/Trained_Weights/SEK_Filter_Weights_New_S50.pt')
     print('SEK Filter Model Loaded')
     
-    #take image
-    cap = cv2.VideoCapture(1)                                                                           # Captures image of source 1 (webcam)
+    # Take image
+    cap = cv2.VideoCapture(1)                                                                           # Captures image from source 1 (webcam)
     ret, frame = cap.read()                                                                             # Capture a single frame 
     print('Image Taken')
     cap.release()   
@@ -66,8 +68,8 @@ def detect_filters():
     main_filter_detected = False
     pre_filter_detected = False 
     
-    #Predicts image
-    results = model(frame, conf=0.8)
+    # Predicts image
+    results = model(frame, conf=0.85)
     
     # Lists to store results
     filter_cls = []
